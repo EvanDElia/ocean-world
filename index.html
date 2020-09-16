@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Ocean World</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				color: #61443e;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+
+				background-color: #aaccff;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#info {
+				color: #ffffff;
+				position: absolute;
+				top: 0px; width: 100%;
+				padding: 5px;
+			}
+            
+            #progress {
+                font-size:52px;
+            }
+
+			a {
+				color: yellow;
+			}
+
+			#oldie {
+				background:rgb(0,0,50) !important;
+				color:#fff !important;
+			}
+			
+			ul {
+			  list-style-type: none;
+			}
+
+		</style>
+	</head>
+	<body>
+
+		<div id="container"></div>
+            <audio id="audio">
+                <source src="audio/01-africanbars.mp3">
+                Your browser does not support the audio element.
+            </audio>
+            </br></br></br>
+            <ul id="playlist">
+                <li class="active">
+                    <a href="audio/01-africanbars.mp3">
+                    Lizard
+                    </a>
+                </li>
+                <li>
+                    <a href="audio/02-robcollab.mp3">
+                    Screwdriver co prod. Stacks//Culture
+                    </a>
+                </li>
+                <li>
+                    <a href="audio/03-funkle.mp3">
+                    Baseball ft. Unkle Funkle
+                    </a>
+                </li>
+                <li>
+                    <a href="audio/04-thursdayblues.mp3">
+                    Silver ft. Unkle Funkle
+                    </a>
+                </li>
+				<li>
+                    <a href="audio/05-jonah.mp3">
+                    Anais co prod. Jonah Baseball
+                    </a>
+                </li>
+				<li>
+                    <a href="audio/06-saturdayafternoon.mp3">
+                    Downfall ft. Satomi
+                    </a>
+                </li>
+				<li>
+                    <a href="audio/07-pantherginger.mp3">
+                    Tarot ft. Dream Panther
+                    </a>
+                </li>
+				<li>
+                    <a href="audio/08-satomituesday.mp3">
+                    Supper co prod. Satomi
+                    </a>
+                </li>
+				<li>
+                    <a href="audio/09-monochrome.mp3">
+                    Lung ft. Monochrome Sweatsuit
+                    </a>
+                </li>
+				<li>
+                    <a href="audio/10-dogdadblues.mp3">
+                    Nectarine ft. Satomi
+                    </a>
+                </li>
+            </ul>
+            </br></br>
+
+<div id="progress">LOADING...</div>
+<p style="font-size:25px">Turn your volume on<br/>Effect controls will appear in the top right</p>
+<div id="info">WASD to move<br />
+Use the mouse to look around</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+<script src="js/three.js"></script><script src="js/libs/dat.gui.min.js"></script>
+<script src="js/loaders/DDSLoader.js"></script><script src="js/loaders/MTLLoader.js"></script>
+<script src="js/loaders/OBJLoader.js"></script><script src="js/controls/FirstPersonControls.js"></script>
+<script src="js/Detector.js"></script><script src="js/stats.min.js"></script><script src='js/postprocessing/EffectComposer.js'></script>
+<script src='js/postprocessing/RenderPass.js'></script><script src='js/postprocessing/ShaderPass.js'></script>
+<script src='js/postprocessing/MaskPass.js'></script><script src='js/shaders/CopyShader.js'></script>
+<script src='js/shaders/FilmShader.js'></script><script src='js/shaders/RGBShiftShader.js'></script>
+<script src='js/shaders/BadTVShader.js'></script><script src='js/shaders/StaticShader.js'></script>
+<script>
+
+        /**
+         * @author Evan D'Elia / http://pixelpusher.ninja
+         */
+            //CHECK FOR MOBILE DEVICE
+            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|BB|PlayBook|IEMobile|Windows Phone|Kindle|Silk|Opera Mini/i.test(navigator.userAgent)) {
+                window.location.replace("https://www.pixelpusher.ninja/three/OceanMobile.html");
+            }
+            else if( screen.width <= 800 ) {
+                window.location.replace("https://www.pixelpusher.ninja/three/OceanMobile.html");
+            }
+            
+if ( ! Detector.webgl ) {
+				Detector.addGetWebGLMessage();
+				document.getElementById( 'container' ).innerHTML = "";
+			}
+            
+            var audio, playlist, tracks, current;
+
+			var container, stats;
+            var obj;
+			var camera, controls, scene, renderer;
+
+            var composer;
+            var shaderTime = 0;
+            var badTVParams, badTVPass;		
+            var staticParams, staticPass;		
+            var rgbParams, rgbPass;	
+            var filmParams, filmPass;	
+            var renderPass, copyPass;
+
+			var waterMesh, waterTexture, waterBump, waterGeo, waterMat;
+            var crateArray = [];
+            var crateMesh, crateTexture, crateGeo, crateMaterial;
+            var wallMesh, wallTexture, wallBump, wallGeo, wallMat;
+            var grassTexture, grassBump;
+            var textureCube;
+            var weed1, weed2, weed3, girl, beer1, beer2, keg, tit, titTexture, tit2, tit3, tit2Texture, tit3Texture, body1, body2, body1Texture, body2Texture;
+            var normalMaterial = new THREE.MeshNormalMaterial();
+            var greenMaterial = new THREE.MeshStandardMaterial({color: 0x2B8C0B});
+            
+            var waveHeight = 35;
+            
+            var guiControls, datGUI, LSD;
+            
+            var text1Mesh, text6Mesh, text7Mesh, text8Mesh;
+            var textMaterial = new THREE.MeshNormalMaterial( { wireframe: true} );
+            
+            var personalLight;
+
+			var worldWidth = 128, worldDepth = 128,
+			worldHalfWidth = worldWidth / 2, worldHalfDepth = worldDepth / 2;
+
+			var clock = new THREE.Clock();
+            $(document).ready(function(){
+			loadEverything();
+            });
+            
+            document.getElementById("container").onclick = function(){
+                $('#audio')[0].play();
+            };
+
+			function init() {
+
+				container = document.getElementById( 'container' );
+                
+                renderer = new THREE.WebGLRenderer( { preserveDrawingBuffer: true, precision: "lowp" } );
+				renderer.setClearColor( 0xaaccff );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                renderer.gammaInput = true;
+                renderer.gammaOutput = true;
+                
+                container.innerHTML = "";
+				container.appendChild( renderer.domElement );
+
+                //Displays current FPS
+				stats = new Stats();
+				container.appendChild( stats.dom );
+
+				window.addEventListener( 'resize', onWindowResize, false );
+                
+                scene = new THREE.Scene();
+				scene.fog = new THREE.FogExp2( 0xEDC48E, 0.0002 );
+
+				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 25000 );
+				camera.position.set(-6300, 200, -1000);
+                scene.add(camera);
+
+				controls = new THREE.FirstPersonControls( camera, renderer.domElement );
+				controls.movementSpeed = 500;
+				controls.lookSpeed = 0.05;
+
+                renderPass = new THREE.RenderPass( scene, camera );
+                badTVPass = new THREE.ShaderPass( THREE.BadTVShader );
+                rgbPass = new THREE.ShaderPass( THREE.RGBShiftShader );
+                filmPass = new THREE.ShaderPass( THREE.FilmShader );
+                staticPass = new THREE.ShaderPass( THREE.StaticShader );
+                copyPass = new THREE.ShaderPass( THREE.CopyShader );
+                //GUI Controls
+                guiControls = new function(){
+                    this.LightIntensity = 5.0;     
+                    this.LightDistance = 4000;
+                    this.LightAngle = 0.75;       
+                    this.waveHeight = 35.0;
+                    this.rotationSpeed = 0.0002;
+                    this.LSD = false;
+                }
+
+                filmPass.uniforms.grayscale.value = 0;
+                badTVParams = {
+                    show: false,
+                    distortion: 3.0,
+                    distortion2: 1.0,
+                    speed: 0.3
+                };
+
+                staticParams = {
+                    show: false,
+                    amount:0.5,
+                    size:4.0
+                };
+
+                rgbParams = {
+                    show: false,
+                    amount: 0.005,
+                    angle: 0.0,
+                };
+
+                filmParams = {
+                    show: false,
+                    count: 800,
+                    sIntensity: 0.9,
+                    nIntensity: 0.4
+                };
+                
+                //SKYBOX
+                var shader = THREE.ShaderLib["cube"];
+                shader.uniforms['tCube'].value = textureCube;   // textureCube has been init before
+                var SkyboxMat = new THREE.ShaderMaterial({
+                    fragmentShader : shader.fragmentShader,
+                    vertexShader : shader.vertexShader,
+                    uniforms : shader.uniforms,
+                    depthWrite: false,
+					side: THREE.BackSide
+                });
+  
+                skyboxMesh = new THREE.Mesh( new THREE.BoxBufferGeometry( 20000, 20000, 20000 ), SkyboxMat );
+                skyboxMesh.position.y = 200;
+                scene.add( skyboxMesh );
+               
+                //OBJECTS
+				waterGeo = new THREE.PlaneGeometry( 20000, 20000, worldWidth - 1, worldDepth - 1 );
+                waterGeo.rotateX( - Math.PI / 2 );
+                for ( var i = 0, l = waterGeo.vertices.length; i < l; i ++ ) {
+					waterGeo.vertices[ i ].y = 35 * Math.sin( i / 2 );
+				}
+				waterTexture.wrapS = waterTexture.wrapT = THREE.RepeatWrapping;
+				waterTexture.repeat.set( 5, 5 );
+                waterBump.wrapS = waterBump.wrapT = THREE.RepeatWrapping;
+                waterBump.repeat.set( 5, 5 );
+                waterMat = new THREE.MeshPhongMaterial( { color: 0x0044ff, map: waterTexture, normalMap: waterBump } );
+                waterMesh = new THREE.Mesh( waterGeo, waterMat );
+				scene.add( waterMesh );
+				
+				var titMat = new THREE.MeshPhongMaterial({map: titTexture, shininess: 0});//,bumpMap: titTexture, bumpScale: 9});
+				tit.children[0].material = titMat;
+				tit.children[0].geometry = new THREE.Geometry().fromBufferGeometry( tit.children[0].geometry );
+				tit.children[0].geometry.mergeVertices();
+				tit.children[0].geometry.computeVertexNormals();
+				tit.children[0].geometry = new THREE.BufferGeometry().fromGeometry( tit.children[0].geometry );
+				
+				var tit2Mat = new THREE.MeshPhongMaterial({map: tit2Texture, shininess: 0});
+				tit2.children[0].material = tit2Mat;
+				tit2.children[0].geometry = new THREE.Geometry().fromBufferGeometry( tit2.children[0].geometry );
+				tit2.children[0].geometry.mergeVertices();
+				tit2.children[0].geometry.computeVertexNormals();
+				tit2.children[0].geometry = new THREE.BufferGeometry().fromGeometry( tit2.children[0].geometry );
+
+				
+				//var tit3Mat = new THREE.MeshPhongMaterial({map: tit3Texture, shininess: 0});
+				//tit3.children[0].material = tit3Mat;
+				//tit3.children[0].geometry = new THREE.Geometry().fromBufferGeometry( tit3.children[0].geometry );
+				//tit3.children[0].geometry.mergeVertices();
+				//tit3.children[0].geometry.computeVertexNormals();
+				
+				var body1Mat = new THREE.MeshPhongMaterial({map: body1Texture, shininess: 0});
+				body1.children[0].material = body1Mat;
+				body1.children[0].geometry = new THREE.Geometry().fromBufferGeometry( body1.children[0].geometry );
+				body1.children[0].geometry.mergeVertices();
+				body1.children[0].geometry.computeVertexNormals();
+				body1.children[0].geometry = new THREE.BufferGeometry().fromGeometry( body1.children[0].geometry );
+
+				
+				var body2Mat = new THREE.MeshPhongMaterial({map: body2Texture, shininess: 0});
+				body2.children[0].material = body2Mat;
+				body2.children[0].geometry = new THREE.Geometry().fromBufferGeometry( body2.children[0].geometry );
+				body2.children[0].geometry.mergeVertices();
+				body2.children[0].geometry.computeVertexNormals();
+				body2.children[0].geometry = new THREE.BufferGeometry().fromGeometry( body2.children[0].geometry );
+                
+                //crateGeo = new THREE.BoxBufferGeometry(200, 200, 200);
+                //crateMaterial = new THREE.MeshPhongMaterial( { map: crateTexture } );
+                for ( var i = 0; i < 400; i ++ ) {
+					var tempMesh;
+					var rand = Math.random();
+					if (rand < 0.3) tempMesh = tit.clone();
+					else if (rand < 0.6) tempMesh = tit2.clone();
+					else if (rand < 0.9) tempMesh = body2.clone();
+					else tempMesh = body1.clone();
+					tempMesh.position.x = Math.random() * 5000 - 2500;
+					tempMesh.position.y = Math.random() * 2000;
+					tempMesh.position.z = Math.random() * 12000 - 6000;
+					tempMesh.rotation.x = Math.random() * 2 * Math.PI;
+					tempMesh.rotation.y = Math.random() * 2 * Math.PI;
+					tempMesh.rotation.z = Math.random() * 2 * Math.PI;
+					tempMesh.scale.x = tempMesh.scale.y = tempMesh.scale.z = Math.random() * 3 + 1;
+					scene.add(tempMesh);
+					crateArray.push(tempMesh);
+				}
+                
+                wallGeo = new THREE.BoxBufferGeometry(6000, 600, 10);
+				wallTexture.wrapS = wallTexture.wrapT = THREE.RepeatWrapping;
+				wallTexture.repeat.set( 20, 2 );
+                wallBump.wrapS = wallBump.wrapT = THREE.RepeatWrapping;
+				wallBump.repeat.set( 20, 2 );
+                //wallRoughness.wrapS = wallRoughness.wrapT = THREE.RepeatWrapping;
+				//wallRoughness.repeat.set( 20, 2 );
+                wallMat = new THREE.MeshPhongMaterial({map: wallTexture, bumpMap: wallBump});//, specularMap: wallRoughness});
+                wallMesh = new THREE.Mesh(wallGeo, wallMat);
+                wallMesh.position.x = -4000
+                wallMesh.position.y = 300
+                wallMesh.receiveShadow = true;
+                scene.add( wallMesh );
+                
+                var wall2 = wallMesh.clone();
+                wall2.position.z = -2000;
+                scene.add(wall2);
+                
+                var floorGeo = wallGeo.clone();
+				grassTexture.wrapS = grassTexture.wrapT = THREE.RepeatWrapping;
+				grassTexture.repeat.set( 20, 5 );
+                grassBump.wrapS = grassBump.wrapT = THREE.RepeatWrapping;
+				grassBump.repeat.set( 20, 5 );
+                var floorMat = new THREE.MeshPhongMaterial({map: grassTexture, normalMap: grassBump});
+                var floor = new THREE.Mesh(floorGeo, floorMat);
+                floor.receiveShadow = true;
+                floor.scale.y = 3.4;
+                floor.rotation.x = Math.PI / 2;
+                floor.position.x = -4000
+                floor.position.y = 50;
+                floor.position.z = -1000;
+                scene.add(floor);
+                
+                var roof = wallMesh.clone();
+                roof.scale.y = 3.4;
+                roof.rotation.x = Math.PI / 2;
+                roof.position.x = -4000
+                roof.position.y = 600;
+                roof.position.z = -1000;
+                scene.add(roof);
+                
+                var backWall = wallMesh.clone();
+                backWall.rotation.y = Math.PI / 2;
+                backWall.scale.x = 0.5;
+                backWall.position.set(-7000, 300, -700);
+                backWall.receiveShadow = false;
+                scene.add(backWall);
+                
+                //Particle System
+				var program = function ( context ) {
+					context.beginPath();
+					context.arc( 0, 0, 0.5, 0, Math.PI * 2, true );
+					context.fill();
+				};
+				group = new THREE.Group();
+				scene.add( group );
+				for ( var i = 0; i < 2500; i++ ) {
+					var material = new THREE.SpriteMaterial( {
+						color: Math.random() * 0x808008 + 0x808080,
+					} );
+					particle = new THREE.Sprite( material );
+					particle.position.x = Math.random() * 2500 - 500;
+					particle.position.y = Math.random() * 2000 + 3000;
+					particle.position.z = Math.random() * 6000 - 1000;
+					particle.scale.x = particle.scale.y = Math.random() * 20 + 10;
+					group.add( particle );
+				}
+                
+                //3D Models                
+                weed1.scale.x = weed1.scale.y = weed1.scale.z = .05;
+                weed1.position.set(-3900, 200, -220);
+                scene.add(weed1);
+                
+                weed2.position.set(-5000, 50, -1600);
+				weed2.scale.set(2,2,2);
+                scene.add(weed2);
+                
+                weed3 = weed2.clone();
+                weed3.children[0].material = normalMaterial;
+                weed3.position.set(-5300, 50, -1900);
+                scene.add(weed3);
+                
+                girl.position.set(-1000, 0, 2000);
+                scene.add(girl);
+                
+                beer1.position.set(-2000, 200, 4000);
+                beer1.scale.set(6, 6, 6);                
+                scene.add(beer1);
+                
+                beer2.position.set(3555, 200, 4444);
+                beer2.scale.set(50, 50, 50);
+                scene.add(beer2);
+                
+                keg.scale.set(30, 30, 30);
+                keg.position.set(3000, 400, 5000);
+                scene.add(keg);
+                
+                //TEXT
+                {
+                text1Mesh.position.set(-6500, 150, -500);
+                text1Mesh.traverse( function ( child ) {
+                    if ( child instanceof THREE.Mesh ) {
+                        child.castShadow = true;
+                    }
+                } );
+                text1Mesh.rotation.y = -Math.PI / 2;
+				scene.add(text1Mesh);
+                
+                text6Mesh.position.set(5000, 180, -1300);
+                text6Mesh.rotation.y = -Math.PI / 2;
+				scene.add(text6Mesh);
+                
+                text7Mesh.position.set(5000, 250, 1000);
+                text7Mesh.rotation.y = -Math.PI / 2;
+				scene.add(text7Mesh);
+                
+                text8Mesh.position.set(-7500, 250, -200);
+                text8Mesh.rotation.y = Math.PI / 2;
+				scene.add(text8Mesh);
+                }
+                
+                //LIGHTING             
+                var light = new THREE.AmbientLight( 0x404045 ); // soft white light
+                scene.add( light );
+                
+                var spotLight = new THREE.SpotLight( 0xffffff );
+                spotLight.position.set( -1500, 1000, 3100 );
+                //spotLight.castShadow = true;
+                spotLight.intensity = 5.0;
+				spotLight.angle = 0.75;
+				spotLight.exponent = 2.0;
+				spotLight.penumbra = 0.05;
+				spotLight.decay = 2;
+				spotLight.distance = 2000;
+				//spotLight.shadow.mapSize.width = 1024;
+				//spotLight.shadow.mapSize.height = 1024;
+				//shadow camera helper
+				//spotLight.shadowCameraHelper = new THREE.CameraHelper( spotLight.shadow.camera ); // colored lines
+				//spotLight.shadow.camera.near = 0.1;
+				//spotLight.shadow.camera.far = 20000;             
+                //lightHelper = new THREE.SpotLightHelper(spotLight);
+                scene.add( spotLight );
+                //scene.add( spotLight.shadowCameraHelper );
+                //scene.add(lightHelper);
+                				
+                var intensity = 8.5;
+				var distance = 500;
+				var decay = 2.0;               
+                personalLight = new THREE.PointLight( 0xFFFFFF, 4, distance * 2, decay );
+                scene.add(personalLight);
+                
+                var spotLightEntrance = spotLight.clone();
+                spotLightEntrance.position.set(-6900, 500, -800);
+                spotLightEntrance.rotation.x = 30;
+                spotLightEntrance.castShadow = true;
+                spotLightEntrance.shadow.camera.near = 0.1;
+				spotLightEntrance.shadow.camera.far = 20000;
+                spotLightEntrance.target = text1Mesh;
+                scene.add(spotLightEntrance);
+                //var lightHelperEntrance = new THREE.SpotLightHelper(spotLightEntrance);      
+                //scene.add(lightHelperEntrance);
+                
+                var spotLight2 = spotLightEntrance.clone();               
+                spotLight2.position.x = -5000;
+                spotLight2.position.z = -1200;
+                spotLight2.target = weed2;
+                //var lightHelper2 = new THREE.SpotLightHelper(spotLight2);
+                scene.add(spotLight2);
+                //scene.add(lightHelper2);
+                
+                var spotLight3 = spotLightEntrance.clone();
+                spotLight3.position.x = -3000;
+                spotLight3.position.z = -500;
+                spotLight3.target = weed1;
+                //var lightHelper3 = new THREE.SpotLightHelper(spotLight3);
+                scene.add(spotLight3);
+                //scene.add(lightHelper3);
+                
+                var spotLight4 = spotLightEntrance.clone();
+                spotLight4.position.x = -2000;
+                spotLight4.position.z = -1600;
+                spotLight4.target = tit;
+                //var lightHelper4 = new THREE.SpotLightHelper(spotLight4);
+                scene.add(spotLight4);
+                //scene.add(lightHelper4);
+                
+                //DAT GUI
+                datGUI = new dat.GUI();
+                
+                datGUI.add(guiControls, 'LightIntensity',0.01, 10).onChange(function(value){
+                    spotLight.intensity = value;
+                    spotLightEntrance.intensity = value;
+                    spotLight2.intensity = value;
+                    spotLight3.intensity = value;
+                    spotLight4.intensity = value;
+                });     
+                datGUI.add(guiControls, 'LightDistance',1500, 8000).onChange(function(value){
+                    spotLight.distance = value;
+                    spotLightEntrance.distance = value;
+                    spotLight2.distance = value;
+                    spotLight3.distance = value;
+                    spotLight4.distance = value;
+                }); 
+                datGUI.add(guiControls, 'LightAngle',0.001, 1.570).onChange(function(value){
+                    spotLight.angle = value;
+                    spotLightEntrance.angle = value;
+                    spotLight2.angle = value;
+                    spotLight3.angle = value;
+                    spotLight4.angle = value;
+                });
+                datGUI.add(guiControls, 'waveHeight',2, 80).onChange(function(value){
+                    waveHeight = value;
+                });              
+                datGUI.add(guiControls, 'rotationSpeed',0, .01);
+                LSD = datGUI.add(guiControls, 'LSD');
+                LSD.onChange(function(value){
+                    skyboxMesh.visible = !value;
+                    renderer.autoClearColor = !value;
+                    roof.visible = !value;
+                });                
+                var f1 = datGUI.addFolder('Bad TV');
+                f1.add(badTVParams, 'show').onChange(onToggleShaders);
+                f1.add(badTVParams, 'distortion', 0.1, 20).step(0.1).listen().name('Thick Distort').onChange(onParamsChange);
+                f1.add(badTVParams, 'distortion2', 0.1, 20).step(0.1).listen().name('Fine Distort').onChange(onParamsChange);
+                f1.add(badTVParams, 'speed', 0.0,1.0).step(0.01).listen().name('Distort Speed').onChange(onParamsChange);
+
+                var f2 = datGUI.addFolder('RGB Shift');
+                f2.add(rgbParams, 'show').onChange(onToggleShaders);
+                f2.add(rgbParams, 'amount', 0.0, 0.1).listen().onChange(onParamsChange);
+                f2.add(rgbParams, 'angle', 0.0, 2.0).listen().onChange(onParamsChange);
+
+                var f4 = datGUI.addFolder('Static');
+                f4.add(staticParams, 'show').onChange(onToggleShaders);
+                f4.add(staticParams, 'amount', 0.0,1.0).step(0.01).listen().onChange(onParamsChange);
+                f4.add(staticParams, 'size', 1.0,100.0).step(1.0).onChange(onParamsChange);
+
+                var f3 = datGUI.addFolder('Scanlines');
+                f3.add(filmParams, 'show').onChange(onToggleShaders);
+                f3.add(filmParams, 'count', 50, 1000).onChange(onParamsChange);
+                f3.add(filmParams, 'sIntensity', 0.0, 2.0).step(0.1).onChange(onParamsChange);
+                f3.add(filmParams, 'nIntensity', 0.0, 2.0).step(0.1).onChange(onParamsChange);
+
+                onToggleShaders();
+                onParamsChange();
+                datGUI.close();
+                randomizeParams();
+   
+                //Automatically trigger LSD
+                setTimeout('lsdizzle()', 95000); ///////CHANGE PLEASE
+			}
+
+            function onParamsChange() {
+
+			//copy gui params into shader uniforms
+			badTVPass.uniforms[ 'distortion' ].value = badTVParams.distortion;
+			badTVPass.uniforms[ 'distortion2' ].value = badTVParams.distortion2;
+			badTVPass.uniforms[ 'speed' ].value = badTVParams.speed;
+
+			staticPass.uniforms[ 'amount' ].value = staticParams.amount;
+			staticPass.uniforms[ 'size' ].value = staticParams.size;
+
+			rgbPass.uniforms[ 'angle' ].value = rgbParams.angle*Math.PI;
+			rgbPass.uniforms[ 'amount' ].value = rgbParams.amount;
+
+			filmPass.uniforms[ 'sCount' ].value = filmParams.count;
+			filmPass.uniforms[ 'sIntensity' ].value = filmParams.sIntensity;
+			filmPass.uniforms[ 'nIntensity' ].value = filmParams.nIntensity;
+		}
+
+
+		function randomizeParams() {
+			badTVParams.distortion = Math.random()*10+0.1;
+			badTVParams.distortion2 =Math.random()*10+0.1;
+			badTVParams.speed =Math.random()*0.4;
+			rgbParams.angle = Math.random()*2;
+			rgbParams.amount = Math.random()*0.03;
+			staticParams.amount = Math.random()*0.2;
+
+			onParamsChange();
+		}
+
+		function onToggleShaders(){
+
+			//Add Shader Passes to Composer
+			//order is important 
+			composer = new THREE.EffectComposer( renderer);
+			composer.addPass( renderPass );
+			
+			if (filmParams.show){
+				composer.addPass( filmPass );
+			}
+
+			if (badTVParams.show){
+				composer.addPass( badTVPass );
+			}
+
+			if (rgbParams.show){
+				composer.addPass( rgbPass );
+			}
+
+			if (staticParams.show){
+				composer.addPass( staticPass );
+			}
+
+			composer.addPass( copyPass );
+			copyPass.renderToScreen = true;
+		}
+            
+            function lsdizzle(){
+                skyboxMesh.visible = false;
+                renderer.autoClearColor = false;
+                guiControls.LSD = true; 
+                LSD.updateDisplay();
+            }
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				controls.handleResize();
+
+			}
+
+			function animate() {
+				requestAnimationFrame( animate );
+
+				render();
+				stats.update();
+			}
+            
+			function render() {
+                //first person controls
+				var delta = clock.getDelta(),
+					time = clock.getElapsedTime() * 10;
+                controls.update( delta );
+             
+                //animate water
+				for ( var i = 0, l = waterGeo.vertices.length; i < l; i ++ ) {
+					waterGeo.vertices[ i ].y = waveHeight * Math.sin( i / 5 + ( time + i ) / 7 );
+				}
+				waterMesh.geometry.verticesNeedUpdate = true;
+                
+                //animate particles of group
+                for (var i = 0; i < group.children.length; i++){
+                    group.children[i].position.y-= 3 * Math.random();
+                    if (Math.random() < 0.2) group.children[i].material.opacity -= 0.1;
+                    if (group.children[i].material.opacity <= 0.0) group.children[i].material.opacity = 1.0;
+                    if (group.children[i].position.y <= 0) group.children[i].position.y = 2000;
+                }
+               
+                //personalLight follows camera
+                camera.add(personalLight);
+                personalLight.position.z = 100;
+                personalLight.position.y = -10;
+                
+                //animate crates
+                for (var i = 0; i < crateArray.length; i++){
+                    crateArray[i].rotation.x += 0.005;
+                    crateArray[i].rotation.y += 0.01;
+                }
+                
+                var rot = Date.now() * guiControls.rotationSpeed;
+
+                //animate objects
+                weed1.rotation.set(rot, rot, rot);
+                beer2.rotation.set(rot, rot, rot);
+                keg.rotation.set(rot, rot, rot);
+                beer1.rotation.set(rot, rot, rot);
+                
+                //animate text
+                text1Mesh.rotation.set(rot, rot, rot);
+
+				//renderer.render( scene, camera );
+                //console.log(camera.position.x + " : " + camera.position.y + " : " +  camera.position.z);
+                composer.render( 0.1);
+			}
+            
+            function loadEverything() {
+                var manager = new THREE.LoadingManager();
+                manager.onLoad = function(){
+                    initSound();
+                    init();
+                    animate();
+                }
+                manager.onProgress = function(url, loaded, total){
+                    document.getElementById("progress").innerHTML = ((loaded / total * 100) + "").substring(0,4) + "% </br>Loaded...";
+                }
+                /*
+                THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader(manager) );
+				var mtlLoader = new THREE.MTLLoader(manager);
+				mtlLoader.setBaseUrl( '../obj/' );
+				mtlLoader.setPath( '../obj/' );
+                mtlLoader.load( 'male02_dds.mtl', function( materials ) {
+					materials.preload();
+					var objLoader = new THREE.OBJLoader(manager);
+					objLoader.setMaterials( materials );
+					objLoader.setPath( 'obj/' );
+					objLoader.load( 'male02.obj', function ( object ) {
+						man = object;
+					});
+				});*/
+                var objLoader = new THREE.OBJLoader(manager);
+				objLoader.setPath( 'obj/' );
+				objLoader.load( 'weed/weed-leaf.obj', function ( object ) {
+					weed1 = object;
+                    weed1.children[0].material = greenMaterial;
+				});
+                objLoader.load( 'weed/weed-plant.obj', function ( object ) {
+					weed2 = object;
+                    weed2.children[0].material = greenMaterial;
+				});
+                objLoader.load( 'beer/bottle.obj', function ( object ) {
+					beer1 = object;
+                    beer1.children[0].material = greenMaterial;
+				});
+                objLoader.load( 'beer/glass.obj', function ( object ) {
+					beer2 = object;
+                    beer2.children[0].material = normalMaterial;
+				});
+                objLoader.load( 'beer/keg.obj', function ( object ) {
+					keg = object;
+                    keg.children[0].material = normalMaterial;
+				});
+                objLoader.load( 'girl/sexy-girl.obj', function ( object ) {
+					girl = object;
+                    girl.children[0].material = normalMaterial;
+				});
+                objLoader.load( 'text/text1.obj', function ( object ) {
+					text1Mesh = object;
+                    text1Mesh.children[0].material = textMaterial;
+				});
+                objLoader.load( 'text/text6.obj', function ( object ) {
+					text6Mesh = object;
+                    text6Mesh.children[0].material = textMaterial;
+				});
+                objLoader.load( 'text/text7.obj', function ( object ) {
+					text7Mesh = object;
+                    text7Mesh.children[0].material = textMaterial;
+				});
+                objLoader.load( 'text/text8.obj', function ( object ) {
+					text8Mesh = object;
+                    text8Mesh.children[0].material = textMaterial;
+				});
+				objLoader.load( 'tit/boob_01.obj', function ( object ) {
+					tit = object;
+                    //tit.children[0].material = textMaterial;
+				});
+				objLoader.load( 'tit/boob_02.obj', function ( object ) {
+					tit2 = object;
+				});
+				//objLoader.load( 'tit/boob_03.obj', function ( object ) {
+					//tit3 = object;
+                    //tit.children[0].material = textMaterial;
+				//});
+				objLoader.load( 'tit/body_01.obj', function ( object ) {
+					body1 = object;
+				});
+				objLoader.load( 'tit/body_02.obj', function ( object ) {
+					body2 = object;
+				});
+				titTexture = new THREE.TextureLoader(manager).load( 'obj/tit/titsSurface_Color.png' );
+				tit2Texture = new THREE.TextureLoader(manager).load( 'obj/tit/boob_01Surface_Color.png' );
+				//tit3Texture = new THREE.TextureLoader(manager).load( 'obj/tit/boob_03titsSurface_Color.png' );
+				body1Texture = new THREE.TextureLoader(manager).load( 'obj/tit/body_01.1Surface_Color.png' );
+				body2Texture = new THREE.TextureLoader(manager).load( 'obj/tit/body_02Surface_Color.png' );
+                wallTexture = new THREE.TextureLoader(manager).load( "textures/brick_diffuse.jpg" );
+                wallBump = new THREE.TextureLoader(manager).load( "textures/brick_bump.jpg" );
+                //wallRoughness = new THREE.TextureLoader(manager).load( "textures/brick_roughness.jpg" );
+                waterTexture = new THREE.TextureLoader(manager).load( "textures/water.jpg" );
+                waterBump = new THREE.TextureLoader(manager).load( "textures/waternormals.jpg" );
+                grassTexture = new THREE.TextureLoader(manager).load( "textures/grasslight-big.jpg" );
+                grassBump = new THREE.TextureLoader(manager).load( "textures/grasslight-big-nm.jpg" );
+                var urlPrefix = "textures/skybox/";
+                var urls = [ urlPrefix + "px.jpg", urlPrefix + "nx.jpg",
+                    urlPrefix + "py.jpg", urlPrefix + "ny.jpg",
+                    urlPrefix + "pz.jpg", urlPrefix + "nz.jpg" ];
+                textureCube = (new THREE.CubeTextureLoader(manager)).load( urls );
+			}
+            
+            function initSound(){
+                current = 0;
+                audio = $('#audio');
+                playlist = $('#playlist');
+                tracks = $('#playlist').find('li a');
+                len = tracks.length - 1;
+                audio[0].volume = .50;
+                audio[0].play();
+                playlist.find('a').click(function(e){
+                    e.preventDefault();
+                    link = $(this);
+                    current = link.parent().index();
+                    run(link, audio[0]);
+                });
+                audio[0].addEventListener('ended',function(e){
+                    current++;
+                    if(current == len){
+                        current = 0;
+                        link = playlist.find('a')[0];
+                    }else{
+                        link = playlist.find('a')[current];
+                    }
+                    run($(link),audio[0]);
+                });
+            }
+            function run(link, player){
+                player.src = link.attr('href');
+                par = link.parent();
+                par.addClass('active').siblings().removeClass('active');
+                player.load();
+                player.play();
+            }
+		</script></body>
+</html>

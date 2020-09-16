@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Ocean World</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				color: #61443e;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+
+				background-color: #aaccff;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#info {
+				color: #ffffff;
+				position: absolute;
+				top: 0px; width: 100%;
+				padding: 5px;
+			}
+            
+            #progress {
+                font-size:52px;
+            }
+
+			a {
+				color: yellow;
+			}
+
+			#oldie {
+				background:rgb(0,0,50) !important;
+				color:#fff !important;
+			}
+			
+			ul {
+			  list-style-type: none;
+			}
+
+		</style>
+	</head>
+	<body>
+
+		<div id="container"></div>
+            <audio id="audio">
+                <source src="audio/01-africanbars.mp3">
+                Your browser does not support the audio element.
+            </audio>
+            </br></br></br>
+            <ul id="playlist">
+                <li class="active">
+                    <a href="audio/01-africanbars.mp3">
+                    Lizard
+                    </a>
+                </li>
+                <li>
+                    <a href="audio/02-robcollab.mp3">
+                    Screwdriver co prod. Stacks//Culture
+                    </a>
+                </li>
+                <li>
+                    <a href="audio/03-funkle.mp3">
+                    Baseball ft. Unkle Funkle
+                    </a>
+                </li>
+                <li>
+                    <a href="audio/04-thursdayblues.mp3">
+                    Silver ft. Unkle Funkle
+                    </a>
+                </li>
+				<li>
+                    <a href="audio/05-jonah.mp3">
+                    Anais co prod. Jonah Baseball
+                    </a>
+                </li>
+				<li>
+                    <a href="audio/06-saturdayafternoon.mp3">
+                    Downfall ft. Satomi
+                    </a>
+                </li>
+				<li>
+                    <a href="audio/07-pantherginger.mp3">
+                    Tarot ft. Dream Panther
+                    </a>
+                </li>
+				<li>
+                    <a href="audio/08-satomituesday.mp3">
+                    Supper co prod. Satomi
+                    </a>
+                </li>
+				<li>
+                    <a href="audio/09-monochrome.mp3">
+                    Lung ft. Monochrome Sweatsuit
+                    </a>
+                </li>
+				<li>
+                    <a href="audio/10-dogdadblues.mp3">
+                    Nectarine ft. Satomi
+                    </a>
+                </li>
+            </ul>
+            </br></br>
+
+<button id="progress">LOADING...</button>
+</br></br>
+
+<p style="font-size:25px">Audio playback requires user interaction. Also turn off Silent Mode<br />
+View on a desktop browser for full experience !</p>
+
+<div id="info">
+Look Around You</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+<script src="js/libs/dat.gui.min.js"></script>
+<script src="js/Detector.js"></script>
+<script src="js/stats.min.js"></script>
+<script type="text/javascript" src="oceanmobile.js"></script></body>
+</html>
